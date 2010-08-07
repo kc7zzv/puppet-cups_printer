@@ -1,4 +1,3 @@
-# This has to be a separate type to enable collecting
 Puppet::Type.newtype(:cups_printer) do
 	@doc = "Manage a cups printer." +
 	       "	cups_printer { 'Brother-HL-2040': " +
@@ -27,28 +26,13 @@ Puppet::Type.newtype(:cups_printer) do
 		desc "The full cups make and model of the printer."
 	end
 	
-#	autorequire :package do
-#		# puts "Starting user autoreq for %s" % self[:name]
-#		reqs = []
-#		matches = self[:name].match(/^([^@]+)@([^\/]+).*$/)
-#		unless matches.nil?
-#			reqs << "%s@%s" % [ matches[1], matches[2] ]
-#		end
-#		# puts "Autoreq: '%s'" % reqs.join(" ")
-#		reqs
-#	end
+	autorequire(:service) do
+		["cups"]
+	end
 
-#	autorequire :serveice do
-#		# puts "Starting user autoreq for %s" % self[:name]
-#		reqs = []
-#		matches = self[:name].match(/^([^@]+)@([^\/]+).*$/)
-#		unless matches.nil?
-#			reqs << "%s@%s" % [ matches[1], matches[2] ]
-#		end
-#		# puts "Autoreq: '%s'" % reqs.join(" ")
-#		reqs
-#	end
-
+	autorequire(:package) do
+		["cups"]
+	end
 
 end
 
