@@ -23,8 +23,18 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	end
 	
 	def exists?
-		printerList = get_printers()
-		printersFileLines.each { |printer| if( printer == resource[:file] ) return true }
+		#puts "Testing if exists\n"
+		printerList,defaultPrinter = get_printers()
+
+		if printerList.length == 0 then puts "Empty printer list\n" end
+
+		printerList.each {
+			|printer|
+			#puts "Printer: "+printer
+			#puts "Name: "+resource[:name]
+			if printer == resource[:name]
+				then return true
+			end }
 		return false
 	end
 	
