@@ -1,3 +1,9 @@
+begin
+    require 'shellwords'
+rescue
+    Puppet.warning "You need the ShellWords ruby module installed to manage cups printers."
+end
+
 Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	desc "Manage a cups printer." +
 	       "	cups_printer { 'Brother-HL-2040': " +
@@ -15,9 +21,35 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	def destroy
 		puts "Removing printer..."
 	end
- 
+	
 	def exists?
+		printerList = get_printers()
+		printersFileLines.each { |printer| if( printer == resource[:file] ) return true }
 		return false
+	end
+	
+	def get_printers()
+		printers = Array.new(0)
+		defaultPrinter = nil
+		printersFile = IO.popen("lpstat -p -d")
+		printersFileLines = printersFile.readlines
+		
+		if( printersFileLines.length > 0 )
+			defaultPrinter = printersFileLines.pop()
+			defaultPrinter.slice!("system default destination: ")
+			
+			#remove printer status information
+			printersFileLines.each { |printer| printers.push(printer.split(" ",3)[1]) }
+		end
+		return printers,defaultPrinter
+	end
+	
+	def get_printer_info( printerName )
+		printersFile = IO.popen("lpoptions -p "+ printerName)
+		printerOptionsString = printersFile.readline
+		shellwords = Shellwords.shellwords(printerOptionsString)
+		pairs = shellwords.map{ |s| s.split('=', 2) }.flatten
+		return Hash[*pairs]
 	end
 	
 end
