@@ -16,14 +16,14 @@ Puppet::Type.newtype(:cups_printer) do
 		newvalue(:absent) do
 			provider.destroy
 		end
-	
+		
 		defaultto :present
 	end
 	
 	newparam(:name) do
 		desc "The name of the printer to be managed."
 		isnamevar
-    end
+	end
 	
 	newparam(:uri) do
 		desc "The full URI to the printer.  For example: ipp://localhost:631/printers/Brother-HL-2040"
