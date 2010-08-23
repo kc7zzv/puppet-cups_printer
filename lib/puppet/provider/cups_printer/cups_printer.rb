@@ -1,6 +1,6 @@
 begin
     require 'shellwords'
-rescue
+rescue LoadError
     Puppet.warning "You need the ShellWords ruby module installed to manage cups printers."
 end
 
@@ -25,7 +25,8 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	def exists?
 		#puts "Testing if exists\n"
 		printerList,defaultPrinter = get_printers()
-
+		
+		#Debug
 		if printerList.length == 0 then puts "Empty printer list\n" end
 
 		printerList.each {
@@ -63,3 +64,4 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	end
 	
 end
+

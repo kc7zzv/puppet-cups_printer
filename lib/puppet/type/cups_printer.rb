@@ -25,7 +25,7 @@ Puppet::Type.newtype(:cups_printer) do
 		isnamevar
 	end
 	
-	newparam(:uri) do
+	newproperty(:uri) do
 		desc "The full URI to the printer.  For example: ipp://localhost:631/printers/Brother-HL-2040"
 		
 	end
