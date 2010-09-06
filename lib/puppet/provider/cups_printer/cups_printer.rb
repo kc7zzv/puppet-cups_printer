@@ -15,11 +15,11 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	       "	} "
 	
 	def create
-		puts "Creating printer..."
+		create_printer( resource[:name] )
 	end
 	
 	def destroy
-		puts "Removing printer..."
+		delete_printer( resource[:name] )
 	end
 	
 	def exists?
@@ -38,6 +38,7 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 			end }
 		return false
 	end
+	
 	
 	def get_printers()
 		printers = Array.new(0)
@@ -62,19 +63,53 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		pairs = shellwords.map{ |s| s.split('=', 2) }.flatten
 		return Hash[*pairs]
 	end
+
+	def set_printer_value( printer_name, key, value )
+		puts "Setting \'"+key+"\' to \'"+value+"\' on \'"+resource[:name]+"\'"
+	end
 	
+	def create_printer( printer_name )
+		options = ""
+
+		if( resource[:info] != nil )
+			options = options+" -D \""+resource[:info]+"\" "
+		end
+
+		if( resource[:uri] != nil )
+			options = options+" -i \""+resource[:uri]+"\" "
+		end
+
+		if( resource[:location] != nil )
+			options = options+" -L \""+resource[:location]+"\" "
+		end
+
+		if( resource[:make_and_model] != nil )
+			puts "Resource \'make_and_model\' doesn't exist"
+			options = options+" -P \""+resource[:make_and_model]+"\" "
+		end
+
+		commandOutput = "lpadmin -p \""+printer_name+"\" "+options
+#		commandOutput = IO.popen("lpadmin -p \""+printer_name"\"")
+		puts "Creating "+printer_name+": "+commandOutput
+	end
+	
+	def delete_printer( printer_name )
+		commandOutput = ""
+#		commandOutput = IO.popen("lpadmin -x \""+printer_name"\"")
+		puts "Removing "+printer_name+": "+commandOutput
+	end
+
 
 	def uri
 		return 'http://cupsserver:801/Brother'
 	end
 	
 	def uri=(uri_string)
-		puts "Setting uri to "+uri_string
+		set_printer_value( resource[:name], "uri", uri_string )
 	end
 	
 	
 	def info
-#		@property_hash[:password_hash]
 		return 'Test Printer'
 	end
 	
@@ -90,6 +125,7 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	def location=(location_string)
 		puts "Setting location to "+location_string
 	end
+	
 	
 	def make_and_model
 		return "The full cups make and model of the printer."
