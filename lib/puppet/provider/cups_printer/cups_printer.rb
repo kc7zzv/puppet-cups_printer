@@ -63,5 +63,41 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		return Hash[*pairs]
 	end
 	
+
+	def uri
+		return 'http://cupsserver:801/Brother'
+	end
+	
+	def uri=(uri_string)
+		puts "Setting uri to "+uri_string
+	end
+	
+	
+	def info
+#		@property_hash[:password_hash]
+		return 'Test Printer'
+	end
+	
+	def info=(info_string)
+		puts "Setting info to "+info_string
+	end
+	
+	
+	def location
+		return "Test Room"
+	end
+
+	def location=(location_string)
+		puts "Setting location to "+location_string
+	end
+	
+	def make_and_model
+		return "The full cups make and model of the printer."
+	end
+	
+	def make_and_model=(make_and_model_string)
+		puts "Setting make_and_model to "+make_and_model_string
+	end
+	
 end
 
