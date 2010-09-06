@@ -7,14 +7,15 @@ end
 Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	desc "Manage a cups printer." +
 	       "	cups_printer { 'Brother-HL-2040': " +
-	       "		uri            => 'ipp://localhost:631/printers/Brother-HL-2040', " +
-	       "		info           => 'Brother-HL-2040', " +
-	       "		location       => 'Room Name', " +
-	       "		make_and_model => 'Brother HL-2060 Foomatic/hpijs-pcl5e (recommended)', " +
-	       "		ensure         => present, " +
+	       "		uri      => 'ipp://localhost:631/printers/Brother-HL-2040', " +
+	       "		info     => 'Brother-HL-2040', " +
+	       "		location => 'Room Name', " +
+	       "		ppd_path => '/etc/cups/ppd/Brother-HL-2040.ppd', " +
+	       "		ensure   => present, " +
 	       "	} "
 	
 	def create
+		#puts "Creating printer"
 		create_printer( resource[:name] )
 	end
 	
@@ -60,14 +61,24 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		printersFile = IO.popen("lpoptions -p "+ printerName)
 		printerOptionsString = printersFile.readline
 		shellwords = Shellwords.shellwords(printerOptionsString)
-		pairs = shellwords.map{ |s| s.split('=', 2) }.flatten
-		return Hash[*pairs]
+		pairs = shellwords.map{ |s| s.split('=', 2) }
+		pairs = pairs.each { |option| if(option.length < 2) then option.push("") end }
+		return Hash[*pairs.flatten]
 	end
 
 	def set_printer_value( printer_name, key, value )
-		puts "Setting \'"+key+"\' to \'"+value+"\' on \'"+resource[:name]+"\'"
+		#puts "Setting \'"+key+"\' to \'"+value+"\' on \'"+resource[:name]+"\'"
+		commandOutput = IO.popen("lpadmin -p \""+printer_name+
+			"\" -o "+key+"=\"\\\""+value+"\\\"\"")
 	end
 	
+	def get_printer_value( printer_name, key )
+		#puts "Getting \'"+key+"\' on \'"+resource[:name]+"\'"
+		values = get_printer_info( printer_name )
+		#puts "Got value \'"+key+"\' on \'"+resource[:name]+"\'"
+		return values[key]
+	end
+
 	def create_printer( printer_name )
 		options = ""
 
@@ -82,10 +93,9 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		if( resource[:location] != nil )
 			options = options+" -L \""+resource[:location]+"\" "
 		end
-
-		if( resource[:make_and_model] != nil )
-			puts "Resource \'make_and_model\' doesn't exist"
-			options = options+" -P \""+resource[:make_and_model]+"\" "
+		
+		if( resource[:ppd_path] != nil )
+			options = options+" -P \""+resource[:ppd_path]+"\" "
 		end
 
 		commandOutput = "lpadmin -p \""+printer_name+"\" "+options
@@ -101,38 +111,39 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 
 
 	def uri
-		return 'http://cupsserver:801/Brother'
+		return get_printer_value( resource[:name], "device-uri" )
 	end
 	
 	def uri=(uri_string)
-		set_printer_value( resource[:name], "uri", uri_string )
+		set_printer_value( resource[:name], "device-uri", uri_string )
 	end
 	
 	
 	def info
-		return 'Test Printer'
+		return get_printer_value( resource[:name], "printer-info" )
 	end
 	
 	def info=(info_string)
-		puts "Setting info to "+info_string
+		set_printer_value( resource[:name], "printer-info", info_string )
 	end
 	
 	
 	def location
-		return "Test Room"
+		return get_printer_value( resource[:name], "printer-location" )
 	end
 
 	def location=(location_string)
-		puts "Setting location to "+location_string
+		set_printer_value( resource[:name], "printer-location", location_string )
 	end
 	
 	
-	def make_and_model
+	def ppd_path
 		return "The full cups make and model of the printer."
 	end
 	
-	def make_and_model=(make_and_model_string)
-		puts "Setting make_and_model to "+make_and_model_string
+	def ppd_path=(ppd_path_string)
+		puts "Not setting ppd_path"
+		#set_printer_value( resource[:name], "ppd_path", ppd_path_string )
 	end
 	
 end

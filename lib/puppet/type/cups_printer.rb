@@ -1,11 +1,11 @@
 Puppet::Type.newtype(:cups_printer) do
 	@doc = "Manage a cups printer." +
 	       "	cups_printer { 'Brother-HL-2040': " +
-	       "		uri            => 'ipp://localhost:631/printers/Brother-HL-2040', " +
-	       "		info           => 'Brother-HL-2040', " +
-	       "		location       => 'Room Name', " +
-	       "		make_and_model => 'Brother HL-2060 Foomatic/hpijs-pcl5e (recommended)', " +
-	       "		ensure         => present, " +
+	       "		uri      => 'ipp://localhost:631/printers/Brother-HL-2040', " +
+	       "		info     => 'Brother-HL-2040', " +
+	       "		location => 'Room Name', " +
+	       "		ppd_path => '/etc/cups/ppd/Brother-HL-2040.ppd', " +
+	       "		ensure   => present, " +
 	       "	} "
 	
 	ensurable do
@@ -38,8 +38,8 @@ Puppet::Type.newtype(:cups_printer) do
 		desc "The human readable location of the printer.  (Optional)"
 	end
 	
-	newproperty(:make_and_model) do
-		desc "The full cups make and model of the printer."
+	newproperty(:ppd_path) do
+		desc "The path to the ppd for the printer."
 	end
 	
 	autorequire(:service) do
@@ -48,6 +48,10 @@ Puppet::Type.newtype(:cups_printer) do
 
 	autorequire(:package) do
 		["cups"]
+	end
+
+	autorequire(:file) do
+		self[:ppd_path]
 	end
 
 end
