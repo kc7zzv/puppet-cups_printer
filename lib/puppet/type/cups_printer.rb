@@ -12,7 +12,7 @@ Puppet::Type.newtype(:cups_printer) do
 		newvalue(:present) do
 			provider.create
 		end
-
+		
 		newvalue(:absent) do
 			provider.destroy
 		end
@@ -23,6 +23,10 @@ Puppet::Type.newtype(:cups_printer) do
 	newparam(:name) do
 		desc "The name of the printer to be managed."
 		isnamevar
+	end
+	
+	newparam(:ppd_path) do
+		desc "The path to the ppd for the printer."
 	end
 	
 	newproperty(:uri) do
@@ -36,10 +40,6 @@ Puppet::Type.newtype(:cups_printer) do
 	
 	newproperty(:location) do
 		desc "The human readable location of the printer.  (Optional)"
-	end
-	
-	newproperty(:ppd_path) do
-		desc "The path to the ppd for the printer."
 	end
 	
 	autorequire(:service) do

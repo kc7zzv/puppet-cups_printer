@@ -1,7 +1,13 @@
 begin
-    require 'shellwords'
+	require 'shellwords'
 rescue LoadError
     Puppet.warning "You need the ShellWords ruby module installed to manage cups printers."
+end
+
+begin
+	require 'ftools'
+rescue LoadError
+    Puppet.warning "You need the FTools ruby module installed to manage cups printers."
 end
 
 Puppet::Type.type(:cups_printer).provide(:cups_printer) do
@@ -24,23 +30,52 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	end
 	
 	def exists?
+		#puts "Does printer exist?"
+		if printer_exists?(resource[:name]) == false then
+			return false
+		end
+		
+		#puts "Printer exists"
+		
+		begin
+			if File.compare("/etc/cups/ppd/"+resource[:name]+".ppd",resource[:ppd_path]) == false then
+				puts "/etc/cups/ppd/"+resource[:name]+".ppd"+" <=> "+resource[:ppd_path]
+				return false
+			end
+		rescue
+			return false
+		end
+		
+		#puts "Printer uses correct ppd"
+		
+		#FIXME: Make sure printer is enabled
+		
+		return true
+		
+	end
+	
+
+	def printer_exists?(printer_name_string)
+		
 		#puts "Testing if exists\n"
 		printerList,defaultPrinter = get_printers()
 		
 		#Debug
-		if printerList.length == 0 then puts "Empty printer list\n" end
-
+		if printerList.length == 0 then
+			puts "Empty printer list\n"
+			return false
+		end
+		
 		printerList.each {
 			|printer|
 			#puts "Printer: "+printer
 			#puts "Name: "+resource[:name]
-			if printer == resource[:name]
+			if printer == printer_name_string
 				then return true
 			end }
 		return false
 	end
-	
-	
+
 	def get_printers()
 		printers = Array.new(0)
 		defaultPrinter = nil
@@ -87,7 +122,7 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		end
 
 		if( resource[:uri] != nil )
-			options = options+" -i \""+resource[:uri]+"\" "
+			options = options+" -v \""+resource[:uri]+"\" "
 		end
 
 		if( resource[:location] != nil )
@@ -97,16 +132,26 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		if( resource[:ppd_path] != nil )
 			options = options+" -P \""+resource[:ppd_path]+"\" "
 		end
-
-		commandOutput = "lpadmin -p \""+printer_name+"\" "+options
-#		commandOutput = IO.popen("lpadmin -p \""+printer_name"\"")
-		puts "Creating "+printer_name+": "+commandOutput
+		
+		command = "lpadmin -E -p \""+printer_name+"\" "+options
+		
+		command_output = IO.popen(command)
+		command_output_string = command_output.readlines.join()
+		puts "Creating "+printer_name+": "+command_output_string
+		
+		command = "cupsenable "+printer_name
+		
+		command_output = IO.popen(command)
+		command_output_string = command_output.readlines.join()
+		puts "Enabling "+printer_name+": "+command_output_string
 	end
 	
 	def delete_printer( printer_name )
-		commandOutput = ""
-#		commandOutput = IO.popen("lpadmin -x \""+printer_name"\"")
-		puts "Removing "+printer_name+": "+commandOutput
+		command = "lpadmin -x \""+printer_name+"\""
+		
+		command_output = IO.popen(command)
+		command_output_string = command_output.readlines.join()
+		puts "Removing "+printer_name+": "+command_output_string
 	end
 
 
@@ -136,15 +181,6 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		set_printer_value( resource[:name], "printer-location", location_string )
 	end
 	
-	
-	def ppd_path
-		return "The full cups make and model of the printer."
-	end
-	
-	def ppd_path=(ppd_path_string)
-		puts "Not setting ppd_path"
-		#set_printer_value( resource[:name], "ppd_path", ppd_path_string )
-	end
 	
 end
 
