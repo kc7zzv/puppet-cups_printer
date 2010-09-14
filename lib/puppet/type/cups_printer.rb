@@ -45,14 +45,14 @@ Puppet::Type.newtype(:cups_printer) do
 	autorequire(:service) do
 		["cups"]
 	end
-
+	
 	autorequire(:package) do
 		["cups"]
 	end
-
+	
 	autorequire(:file) do
 		self[:ppd_path]
 	end
-
+	
 end
 

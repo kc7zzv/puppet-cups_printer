@@ -20,6 +20,11 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	       "		ensure   => present, " +
 	       "	} "
 	
+	#FIXME: Use these instead of IO.popen when possible
+	commands :lpadmincmd => "lpadmin"
+	commands :lpoptionscmd => "lpoptions"
+	commands :lpstatcmd => "lpstat"
+	
 	def create
 		#puts "Creating printer"
 		create_printer( resource[:name] )
@@ -38,8 +43,8 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		#puts "Printer exists"
 		
 		begin
+			puts "/etc/cups/ppd/"+resource[:name]+".ppd"+" <=> "+resource[:ppd_path]
 			if File.compare("/etc/cups/ppd/"+resource[:name]+".ppd",resource[:ppd_path]) == false then
-				puts "/etc/cups/ppd/"+resource[:name]+".ppd"+" <=> "+resource[:ppd_path]
 				return false
 			end
 		rescue
@@ -54,7 +59,7 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		
 	end
 	
-
+	
 	def printer_exists?(printer_name_string)
 		
 		#puts "Testing if exists\n"
@@ -75,7 +80,7 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 			end }
 		return false
 	end
-
+	
 	def get_printers()
 		printers = Array.new(0)
 		defaultPrinter = nil
@@ -100,7 +105,7 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		pairs = pairs.each { |option| if(option.length < 2) then option.push("") end }
 		return Hash[*pairs.flatten]
 	end
-
+	
 	def set_printer_value( printer_name, key, value )
 		#puts "Setting \'"+key+"\' to \'"+value+"\' on \'"+resource[:name]+"\'"
 		commandOutput = IO.popen("lpadmin -p \""+printer_name+
@@ -113,18 +118,18 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		#puts "Got value \'"+key+"\' on \'"+resource[:name]+"\'"
 		return values[key]
 	end
-
+	
 	def create_printer( printer_name )
 		options = ""
-
+		
 		if( resource[:info] != nil )
 			options = options+" -D \""+resource[:info]+"\" "
 		end
-
+		
 		if( resource[:uri] != nil )
 			options = options+" -v \""+resource[:uri]+"\" "
 		end
-
+		
 		if( resource[:location] != nil )
 			options = options+" -L \""+resource[:location]+"\" "
 		end
@@ -153,8 +158,8 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 		command_output_string = command_output.readlines.join()
 		puts "Removing "+printer_name+": "+command_output_string
 	end
-
-
+	
+	
 	def uri
 		return get_printer_value( resource[:name], "device-uri" )
 	end
@@ -176,7 +181,7 @@ Puppet::Type.type(:cups_printer).provide(:cups_printer) do
 	def location
 		return get_printer_value( resource[:name], "printer-location" )
 	end
-
+	
 	def location=(location_string)
 		set_printer_value( resource[:name], "printer-location", location_string )
 	end
